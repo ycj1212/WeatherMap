@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/WeatherMap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/Android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/Art_of_Java" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/DidYouGetIt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/ES6" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/RSA" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/SCH_CSE" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/SCH_Library" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/WeatherMap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/android_architecture_patterns" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/do-it-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/kotlin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/solving-algorithms-test" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/tcp-chat" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/where-to-go" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/while-in-use-location" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/vscode/yangstagram" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/학교/학술제/serverless-with-oauth-back" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/YANG/학교/학술제/serverless-with-oauth-backend-1" vcs="Git" />
+  </component>
+</project>
