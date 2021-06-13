@@ -317,4 +317,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .icon(BitmapDescriptorFactory.fromBitmap(createBitmapFromView(view))));
         }
     }
+
+    public void test() {
+        AssetManager am = getResources().getAssets();
+
+        try {
+            InputStream is = am.open("weatherforecast");
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            br.readLine();
+            String s = br.readLine();
+
+            while (s != null) {
+                String[] col = s.split(",");
+                String addr1 = col[0];
+                String addr2 = col[1];
+                String addr3 = col[2];
+                String gridX = col[3];
+                String gridY = col[4];
+                String lat = col[5];
+                String lon = col[6];
+
+                Log.i("test", s);
+
+                s = br.readLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
