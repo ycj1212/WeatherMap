@@ -62,7 +62,7 @@ enum City {
     }
 }
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private static final LatLng[] COORDINATE = new LatLng[City.values().length];
     private static final Marker[] MARKER = new Marker[City.values().length];
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
@@ -105,8 +105,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         LatLng center = new LatLng(36, 127.8);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 7));   // 중심으로 이동
+        mMap.setOnMarkerClickListener(this);
 
         enableMyLocation();
+    }
+
+    @Override
+    public boolean onMarkerClick(@NonNull Marker marker) {
+        Toast.makeText(this, "마커 클릭", Toast.LENGTH_SHORT).show();
+
+        return false;
     }
 
     // request location permission
