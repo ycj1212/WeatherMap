@@ -8,15 +8,18 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +40,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,22 +52,22 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 enum City {
-    SEOUL(new LatLng(37.540705, 126.956764)),
-    INCHEON(new LatLng(37.469221, 126.573234)),
-    GWANGJU(new LatLng(35.126033, 126.831302)),
-    DAEGU(new LatLng(35.798838, 128.583052)),
-    ULSAN(new LatLng(35.519301, 129.239078)),
-    DAEJEON(new LatLng(36.321655, 127.378953)),
-    BUSAN(new LatLng(35.198362, 129.053922)),
-    GYEONGGI(new LatLng(37.567167, 127.190292)),
-    GANGWON(new LatLng(37.555837, 128.209315)),
-    CHUNGNAM(new LatLng(36.557229, 126.779757)),
-    CHUNGBUK(new LatLng(36.628503, 127.929344)),
-    GYEONGBUK(new LatLng(36.248647, 128.664734)),
-    GYEONGNAM(new LatLng(35.259787, 128.664734)),
-    JEONBUK(new LatLng(35.716705, 127.144185)),
-    JEONNAM(new LatLng(34.819400, 126.893113)),
-    JEJU(new LatLng(33.364805, 126.542671));
+    서울(new LatLng(37.540705, 126.956764)),
+    인천(new LatLng(37.469221, 126.573234)),
+    광주(new LatLng(35.126033, 126.831302)),
+    대구(new LatLng(35.798838, 128.583052)),
+    울산(new LatLng(35.519301, 129.239078)),
+    대전(new LatLng(36.321655, 127.378953)),
+    부산(new LatLng(35.198362, 129.053922)),
+    경기(new LatLng(37.567167, 127.190292)),
+    강원(new LatLng(37.555837, 128.209315)),
+    충남(new LatLng(36.557229, 126.779757)),
+    충북(new LatLng(36.628503, 127.929344)),
+    경북(new LatLng(36.248647, 128.664734)),
+    경남(new LatLng(35.259787, 128.664734)),
+    전북(new LatLng(35.716705, 127.144185)),
+    전남(new LatLng(34.819400, 126.893113)),
+    제주(new LatLng(33.364805, 126.542671));
 
     private final LatLng coordinate;
     City(LatLng coordinate) {
@@ -79,6 +86,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private Document doc = null;
 
+    private final PlaceInfo[] placeInfo = new PlaceInfo[] {
+            new PlaceInfo(60,127),
+            new PlaceInfo(55,124),
+            new PlaceInfo(58,74),
+            new PlaceInfo(89,90),
+            new PlaceInfo(102,84),
+            new PlaceInfo(67,100),
+            new PlaceInfo(98,76),
+            new PlaceInfo(60,120),
+            new PlaceInfo(73,134),
+            new PlaceInfo(68,100),
+            new PlaceInfo(69,107),
+            new PlaceInfo(89,91),
+            new PlaceInfo(91,77),
+            new PlaceInfo(63,89),
+            new PlaceInfo(51,67),
+            new PlaceInfo(52,38)};
     private final ArrayList<WeatherInfo>[] weathers = new ArrayList[City.values().length];
 
     @Override
@@ -122,7 +146,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onMarkerClick(@NonNull Marker marker) {
         WeatherDetailsDialogFragment weatherDetailsDialogFragment =
-                new WeatherDetailsDialogFragment(weathers[City.valueOf(marker.getTitle()).ordinal()]);
+                new WeatherDetailsDialogFragment(weathers[City.valueOf(marker.getTitle()).ordinal()], marker.getTitle());
         weatherDetailsDialogFragment.show(getSupportFragmentManager(), "Weather Details");
 
         return true;
@@ -190,8 +214,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             URL url;
 
             try {
-                LatLng coordinate = city.getCoordinate();
-                url = new URL(urls[0]+"gridx="+coordinate.latitude+"&gridy="+coordinate.longitude);
+                url = new URL(urls[0] +
+                        "gridx=" + placeInfo[City.valueOf(city.name()).ordinal()].getGridX() +
+                        "&gridy=" + placeInfo[City.valueOf(city.name()).ordinal()].getGridY());
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                 DocumentBuilder db = dbf.newDocumentBuilder();
 
@@ -208,6 +233,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected void onPostExecute(Document doc) {
             NodeList nodeList = doc.getElementsByTagName("data");
             String hour, day, temp, weather;
+
+            weathers[city.ordinal()].clear();
 
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
@@ -272,6 +299,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     break;
             }
 
+            if (MARKER[city.ordinal()] != null) {
+                MARKER[city.ordinal()].remove();
+            }
             MARKER[city.ordinal()] = mMap.addMarker(new MarkerOptions()
                     .position(city.getCoordinate())
                     .title(city.name())
