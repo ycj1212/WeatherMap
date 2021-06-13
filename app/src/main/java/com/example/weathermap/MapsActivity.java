@@ -8,9 +8,17 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -18,6 +26,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -119,6 +128,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
+    private Bitmap createBitmapFromView(View view) {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        view.measure(displayMetrics.widthPixels, displayMetrics.heightPixels);
+        view.layout(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels);
+        view.buildDrawingCache();
+
+        Bitmap bitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+        view.draw(canvas);
+
+        return bitmap;
+    }
+
     // request location permission
     public void enableMyLocation() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -214,9 +239,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 weathers[city.ordinal()].add(new WeatherInfo(hour, day, temp, weather));
             }
 
+            View view = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE))
+                    .inflate(R.layout.marker, null);
+            TextView cityName = view.findViewById(R.id.textview_city_name);
+            TextView temperature = view.findViewById(R.id.textview_temperature);
+            ImageView weatherImage = view.findViewById(R.id.imageview_weather);
+
+            cityName.setText(city.name());
+            temperature.setText(weathers[city.ordinal()].get(0).getTemperature());
+
+            switch (weathers[city.ordinal()].get(0).getState()) {
+                case "맑음":
+                    weatherImage.setImageResource(R.drawable.ic_wi_day_sunny);
+                    break;
+                case "구름 조금":
+                    weatherImage.setImageResource(R.drawable.ic_wi_cloud);
+                    break;
+                case "구름 많음":
+                case "흐림":
+                    weatherImage.setImageResource(R.drawable.ic_wi_cloudy);
+                    break;
+                case "비":
+                    weatherImage.setImageResource(R.drawable.ic_wi_rain);
+                    break;
+                case "눈/비":
+                    weatherImage.setImageResource(R.drawable.ic_wi_rain_mix);
+                    break;
+                case "눈":
+                    weatherImage.setImageResource(R.drawable.ic_wi_snow);
+                    break;
+                default:
+                    break;
+            }
+
             MARKER[city.ordinal()] = mMap.addMarker(new MarkerOptions()
                     .position(city.getCoordinate())
-                    .title(city.name()));
+                    .title(city.name())
+                    .icon(BitmapDescriptorFactory.fromBitmap(createBitmapFromView(view))));
         }
     }
 }
