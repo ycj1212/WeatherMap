@@ -117,6 +117,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         for (int i=0; i<City.values().length; i++) {
             weathers[i] = new ArrayList<WeatherInfo>();
         }
+
+        Button refreshButton = findViewById(R.id.button_refresh);
+        refreshButton.setOnClickListener(v -> updateAllWeatherInformation());
     }
 
     @Override
@@ -150,6 +153,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         weatherDetailsDialogFragment.show(getSupportFragmentManager(), "Weather Details");
 
         return true;
+    }
+
+    public void updateAllWeatherInformation() {
+        for (City city : City.values()) {
+            new GetXMLTask(this, city).execute("https://www.kma.go.kr/wid/queryDFS.jsp?");
+        }
     }
 
     private Bitmap createBitmapFromView(View view) {
