@@ -112,9 +112,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onMarkerClick(@NonNull Marker marker) {
-        Toast.makeText(this, "마커 클릭", Toast.LENGTH_SHORT).show();
+        WeatherDetailsDialogFragment weatherDetailsDialogFragment =
+                new WeatherDetailsDialogFragment(weathers[City.valueOf(marker.getTitle()).ordinal()]);
+        weatherDetailsDialogFragment.show(getSupportFragmentManager(), "Weather Details");
 
-        return false;
+        return true;
     }
 
     // request location permission
