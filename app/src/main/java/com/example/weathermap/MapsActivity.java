@@ -1,25 +1,16 @@
 package com.example.weathermap;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -27,8 +18,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -40,6 +29,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -71,13 +62,15 @@ enum City {
     }
 }
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnCameraMoveListener {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final LatLng[] COORDINATE = new LatLng[City.values().length];
     private static final Marker[] MARKER = new Marker[City.values().length];
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     private GoogleMap mMap;
     private Document doc = null;
+
+    private final ArrayList<WeatherInfo>[] weathers = new ArrayList[City.values().length];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +80,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        for (int i=0; i<City.values().length; i++) {
+            weathers[i] = new ArrayList<WeatherInfo>();
+        }
     }
 
     @Override
@@ -102,20 +99,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng coordinate = city.getCoordinate();
 
             COORDINATE[i] = coordinate;
-            MARKER[i] = mMap.addMarker(new MarkerOptions().position(coordinate).title(city.name()));
 
             new GetXMLTask(this, city).execute("https://www.kma.go.kr/wid/queryDFS.jsp?");
         }
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(36, 127.8), 7));   // 중심으로 이동
-        mMap.setOnCameraMoveListener(this); // test
+        LatLng center = new LatLng(36, 127.8);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(center, 7));   // 중심으로 이동
 
         enableMyLocation();
-    }
-
-    @Override
-    public void onCameraMove() {
-        Toast.makeText(this, "줌: "+mMap.getCameraPosition().zoom, Toast.LENGTH_SHORT).show();
     }
 
     // request location permission
@@ -151,10 +142,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @SuppressLint("NewApi")
     private class GetXMLTask extends AsyncTask<String, Void, Document> {
-        private Activity context;
+        private Context context;
         private City city;
 
-        public GetXMLTask(Activity context, City city) {
+        public GetXMLTask(Context context, City city) {
             this.context = context;
             this.city = city;
         }
@@ -180,26 +171,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         protected void onPostExecute(Document doc) {
-            String s = "";
             NodeList nodeList = doc.getElementsByTagName("data");
+            String hour, day, temp, weather;
 
             for (int i = 0; i < nodeList.getLength(); i++) {
-                s += "" + i + ": 날씨 정보: ";
                 Node node = nodeList.item(i);
                 Element fstElmnt = (Element) node;
 
-                NodeList nameList = fstElmnt.getElementsByTagName("temp");
-                Element nameElement = (Element) nameList.item(0);
-                nameList = nameElement.getChildNodes();
-                s += "온도 = " + ((Node) nameList.item(0)).getNodeValue() + " ,";
+                NodeList hourList = fstElmnt.getElementsByTagName("hour");
+                Element hourElement = (Element) hourList.item(0);
+                hourList = hourElement.getChildNodes();
+                hour = hourList.item(0).getNodeValue();
+                hour = String.valueOf(Integer.parseInt(hour) - 3);
 
-                NodeList websiteList = fstElmnt.getElementsByTagName("wfKor");
-                Element websiteElement = (Element) websiteList.item(0);
-                websiteList = websiteElement.getChildNodes();
-                s += "날씨 = " + ((Node) websiteList.item(0)).getNodeValue() + "\n";
+                NodeList dayList = fstElmnt.getElementsByTagName("day");
+                Element dayElement = (Element) dayList.item(0);
+                dayList = dayElement.getChildNodes();
+                day = dayList.item(0).getNodeValue();
+                day = String.valueOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH) +
+                        Integer.parseInt(day));
+
+                NodeList tempList = fstElmnt.getElementsByTagName("temp");
+                Element tempElement = (Element) tempList.item(0);
+                tempList = tempElement.getChildNodes();
+                temp = tempList.item(0).getNodeValue();
+
+                NodeList weatherStateList = fstElmnt.getElementsByTagName("wfKor");
+                Element weatherStateElement = (Element) weatherStateList.item(0);
+                weatherStateList = weatherStateElement.getChildNodes();
+                weather = weatherStateList.item(0).getNodeValue();
+
+                weathers[city.ordinal()].add(new WeatherInfo(hour, day, temp, weather));
             }
 
-            Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+            MARKER[city.ordinal()] = mMap.addMarker(new MarkerOptions()
+                    .position(city.getCoordinate())
+                    .title(city.name()));
         }
     }
 }
